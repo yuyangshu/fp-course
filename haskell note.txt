@@ -1,0 +1,112 @@
+universally conserving the property that the outputs of all functions are solely determined by their inputs
+
+this is not functional programming:
+  sum(int list) {
+    var r = 0;
+    for(el in list) {
+      r = r + el
+    }
+    return r;
+  }
+because r = 0 is a violation of the principle above
+
+functional programming is good for not introducing side effects
+
+haskell has type inference so you do not need to declare the type of variables
+
+why use single letter variable names? all that matters is types
+
+:t to get the type of a variable
+:r or :reload to reload
+:info Bool to get info about booleans
+
+line 7:
+  s is polymorphic (Greek: poly -> many, morph -> form) so it starts with a lowercase letter
+  Integer is a typeand thus concrete/monomorphic
+
+line 16:
+  h :: Integer -> Integer -> Integer
+  takes one argument, it is equivalent to h :: Integer -> (Integer -> Integer)
+  which means it takes one argument and returns a function that returns an integer for an integer
+  functions always take exactly one arguemnt in haskell
+  :t h 3 gives you h 3 :: Integer -> Integer
+  thus you can call g (h 3) and get back 204
+
+line 19:
+  this is a lambda function (Greek: l -> lambda)
+  g and gg are equivalent
+  thus you can get 187 from g (\i -> i + 88)
+
+if a function starts with a-z: prefix position by default; otherwise infix position
+  h 77 88 is equivalent to 77 `h` 88
+  (+) 77 88 is equivalent to 77 + 88
+
+there's only one function can possible have the type anything -> anything and that's line 11
+in other languages you can do all sorts of things
+Bool -> Bool -> Bool has 16 functions (2 ^ 2) ^ 2
+
+data types start with a capital letter
+syntax to define a data type: data Name [0..type paramaters] = Ctor1 ... | Ctor2 ... | ...
+line 22:
+  what is the type of F? a constructor that takes no arguments and returns a Boolean
+line 23:
+  derive Show to allow the type to be printed, Eq to allow comparison
+
+line 31:
+  this is pattern matching
+  you get a warning for nonexhaustive patterns
+line 38:
+  this is the more canonical syntax
+
+foldLeft: loop
+foldRight: constructor substitution
+
+when you don't know the function from its type, you write property based tests
+these are not proofs (unlike types), because tests only prove the presence, not the absence of bugs
+
+
+
+tomorrow:
+mapOptional :: (a -> b) -> Optional a -> Optional b
+map         :: (a -> b) -> List a -> Optional b
+(.)
+
+dot compose function composition
+
+list, optional, tee arrow are things that map
+write a function for all things that map
+
+class KHasMap blah where
+  themap :: (a -> b) -> blah a -> blah b
+
+instance Functor List where
+  themap = map
+  {- themap :: (a -> b) -> List a -> List b is the general version -}
+
+{- instance Functor Int does not make sense since Int does not take a type
+:kind List
+List :: * -> *
+:kind Int
+Int :: *
+:kind (->)
+(->) :: * -> * -> *
+:kind (->) Int
+(->) Int :: * -> *
+it now has a type to be a Functor
+-}
+
+flipAnything :: KHasMap k (a -> b) -> a -> k b
+where KHasMap is a constraint
+
+"things that have map" are called Functors
+
+you can have a list of Ts but not a thing of Ts in other languages
+
+=> constraint
+
+then Applicative
+
+Q: when to use the arrow Functor? A: when you don't want the clumsiness of dependency injection
+
+hoogle: search for library function based on function name or type signature
+djinn: generate haskell code from a type

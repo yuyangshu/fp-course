@@ -72,11 +72,23 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 --
 -- prop> \x -> x `headOr` Nil == x
 headOr ::
-  a
-  -> List a
-  -> a
-headOr =
-  error "todo: Course.List#headOr"
+  a -> List a -> a
+headOr x Nil = x
+headOr _ (h :. _) = h
+
+{-
+headOr x list =
+  case list of
+    Nil -> x
+    h :. _ -> h
+-}
+
+{-
+headOr = \x -> \yooz ->
+  case yooz of
+    Nil -> x
+    h :. _ -> h
+-}
 
 -- | The product of the elements of a list.
 --
@@ -89,10 +101,13 @@ headOr =
 -- >>> product (1 :. 2 :. 3 :. 4 :. Nil)
 -- 24
 product ::
-  List Int
-  -> Int
-product =
-  error "todo: Course.List#product"
+  List Int -> Int
+product Nil = 1
+product (h :. t) = h * product t
+
+{-
+product = foldLeft (*) 1
+-}
 
 -- | Sum the elements of the list.
 --
@@ -104,10 +119,13 @@ product =
 --
 -- prop> \x -> foldLeft (-) (sum x) x == 0
 sum ::
-  List Int
-  -> Int
-sum =
-  error "todo: Course.List#sum"
+  List Int -> Int
+sum Nil = 0
+sum (h :. t) = h + sum t
+
+{-
+sum list = foldLeft (+) 0 list
+-}
 
 -- | Return the length of the list.
 --
@@ -116,10 +134,26 @@ sum =
 --
 -- prop> \x -> sum (map (const 1) x) == length x
 length ::
-  List a
-  -> Int
-length =
-  error "todo: Course.List#length"
+  List a -> Int
+length Nil = 0
+length (_ :. t) = 1 + length t
+
+{-
+kanst :: a -> b -> a
+kanst = \a _ -> a
+
+campase :: (b -> c) -> (a -> b) -> a -> c
+campase = \f -> \g -> \a -> f (g a)
+
+length = foldLeft (\r _ -> r + 1) 0
+         foldLeft (\r -> \_ r + 1) 0
+         foldLeft (\r -> kanst ((1 +) r)) 0
+         foldLeft (\r -> campase kanst (1 +) r) 0
+         foldLeft (campase kanst (1 +)) 0
+         foldLeft (compose const (1 +)) 0
+         foldLeft ((.) const (1 +)) 0
+         foldLeft (const . (1 +)) 0
+-}
 
 -- | Map the given function on each element of the list.
 --
@@ -130,11 +164,14 @@ length =
 --
 -- prop> \x -> map id x == x
 map ::
-  (a -> b)
-  -> List a
-  -> List b
-map =
-  error "todo: Course.List#map"
+  (a -> b) -> List a -> List b
+map _ Nil = Nil
+map f (h :. t) = (f h) :. map f t
+
+{-
+map f list = foldRight (\h t -> f h :. t) Nil list
+map f = foldRight ((:.) . f) Nil
+-}
 
 -- | Return elements satisfying the given predicate.
 --
@@ -147,11 +184,23 @@ map =
 --
 -- prop> \x -> filter (const False) x == Nil
 filter ::
-  (a -> Bool)
-  -> List a
-  -> List a
-filter =
-  error "todo: Course.List#filter"
+  (a -> Bool) -> List a -> List a
+filter _ Nil = Nil
+filter p (h :. t) =
+  case p h of
+    True -> h :. filter p t
+    False -> filter p t
+
+{-
+filter p (h :. t) = bool id (h :.) (p h) (filter p t)
+
+if p h then h :. filter p t else filter p t
+bool (filter p t) (h :. filter p t) (p h)
+
+(case p h of
+  True -> (h :.)
+  False -> id) (filter p t)
+-}
 
 -- | Append two lists to a new list.
 --
@@ -166,11 +215,16 @@ filter =
 --
 -- prop> \x -> x ++ Nil == x
 (++) ::
-  List a
-  -> List a
-  -> List a
-(++) =
-  error "todo: Course.List#(++)"
+  List a -> List a -> List a
+(++) Nil l2 = l2
+(++) (h :. t) l2 = h :. ((++) t l2)
+
+{-
+(++) = \x y -> foldRight (:.) y x
+(++) = \x -> \y -> flip (foldRight (:.)) x y
+(++) = \x -> flip (foldRight (:.)) x
+(++) = flip (foldRight (:.))
+-}
 
 infixr 5 ++
 
@@ -185,10 +239,13 @@ infixr 5 ++
 --
 -- prop> \x -> sum (map length x) == length (flatten x)
 flatten ::
-  List (List a)
-  -> List a
-flatten =
-  error "todo: Course.List#flatten"
+  List (List a) -> List a
+flatten Nil = Nil
+flatten (h :. t) = (++) h (flatten t)
+
+{-
+flatten = foldRight (++) Nil
+-}
 
 -- | Map a function then flatten to a list.
 --
@@ -201,21 +258,42 @@ flatten =
 --
 -- prop> \x -> flatMap id (x :: List (List Int)) == flatten x
 flatMap ::
-  (a -> List b)
-  -> List a
-  -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+  (a -> List b) -> List a -> List b
+flatMap = \f x -> flatten (map f x)
+
+{-
+flatMap _ Nil = Nil
+flatMap f (h :. t) = f h ++ flatMap f t
+flatMap f = flatten . map f
+flatMap = (flatten .) . map
+flatMap f = foldRight (\h t -> f h ++ t) Nil
+flatMap f = foldRight ((++) . f) Nil
+-}
+
+{-
+url = 'h' :. '.' :. ''g' :. ' ' :. '=' :. Nil
+
+urlEncoder :: List Char -> List Char
+urlEncoder = flatMap(\c ->
+  case c of
+    ' ' -> '%' :. '2' :. '0' :. Nil
+    '=' -> '%' :. 'e' :. 'q' :. Nil
+    _ -> c :. Nil)
+-}
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
 --
 -- prop> \x -> let types = x :: List (List Int) in flatten x == flattenAgain x
 flattenAgain ::
-  List (List a)
-  -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+  List (List a) -> List a
+flattenAgain = flatMap (\x -> x)
+
+{-
+flatMap f = foldRight ((++) . f) Nil
+flatten = foldRight ((++) . id) Nil
+flattenAgain = flatMap id
+-}
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -262,11 +340,12 @@ seqOptional =
 -- >>> find (const True) infinity
 -- Full 0
 find ::
-  (a -> Bool)
-  -> List a
-  -> Optional a
-find =
-  error "todo: Course.List#find"
+  (a -> Bool) -> List a -> Optional a
+find _ Nil = Empty
+find f (h :. t) =
+  case f h of
+    True -> Full h
+    False -> find f t
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -299,10 +378,32 @@ lengthGT4 =
 --
 -- prop> \x -> let types = x :: Int in reverse (x :. Nil) == x :. Nil
 reverse ::
-  List a
-  -> List a
-reverse =
-  error "todo: Course.List#reverse"
+  List a -> List a
+
+helper :: List a -> List a -> List a
+helper Nil x = x
+helper (h :. t) acc = helper t (h :. acc)
+
+reverse Nil = Nil
+reverse x = helper x Nil
+
+{-
+reverse Nil = Nil
+reverse (h :. t) = reverse t ++ (h :. Nil)
+append runs in time proportional to the first argument so this is too slow (O(n^2))
+one way is to turn it into a tail recursive function (see above)
+-}
+
+{-
+reverse = foldLeft (flip (:.)) Nil
+tangent question: lambda expressions are closed over free variables
+you can also reverse an infinite list twice to get the first element (not with this)
+-}
+
+{-
+headOr x = foldRight (\h t -> h) x
+headOr = foldRight const
+-}
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
