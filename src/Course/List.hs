@@ -77,6 +77,10 @@ headOr x Nil = x
 headOr _ (h :. _) = h
 
 {-
+headOr = foldRight const
+-}
+
+{-
 headOr x list =
   case list of
     Nil -> x
@@ -125,6 +129,7 @@ sum (h :. t) = h + sum t
 
 {-
 sum list = foldLeft (+) 0 list
+sum = foldLeft (+) 0
 -}
 
 -- | Return the length of the list.
@@ -264,6 +269,7 @@ flatMap = \f x -> flatten (map f x)
 {-
 flatMap _ Nil = Nil
 flatMap f (h :. t) = f h ++ flatMap f t
+flatMap f x = flatten (map f x)
 flatMap f = flatten . map f
 flatMap = (flatten .) . map
 flatMap f = foldRight (\h t -> f h ++ t) Nil
@@ -395,14 +401,13 @@ one way is to turn it into a tail recursive function (see above)
 -}
 
 {-
+reverse = foldLeft (\r el -> el :. r) Nil
+reverse = foldLeft (\r el -> (:.) el r) Nil
+reverse = foldLeft (\r el -> flip (:.) r el) Nil
+reverse = foldLeft (\r -> flip (:.) r) Nil
 reverse = foldLeft (flip (:.)) Nil
 tangent question: lambda expressions are closed over free variables
 you can also reverse an infinite list twice to get the first element (not with this)
--}
-
-{-
-headOr x = foldRight (\h t -> h) x
-headOr = foldRight const
 -}
 
 -- | Produce an infinite `List` that seeds with the given value at its head,

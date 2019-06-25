@@ -53,11 +53,13 @@ instance Functor ExactlyOne where
 -- [2,3,4]
 instance Functor List where
   (<$>) ::
-    (a -> b)
-    -> List a
-    -> List b
-  (<$>) =
-    error "todo: Course.Functor (<$>)#instance List"
+    (a -> b) -> List a -> List b
+  (<$>) _ Nil = Nil
+  (<$>) f (h :. t) = f h :. ((<$>) f t)
+
+{-
+(<$>) = map
+-}
 
 -- | Maps a function on the Optional functor.
 --
@@ -68,11 +70,13 @@ instance Functor List where
 -- Full 3
 instance Functor Optional where
   (<$>) ::
-    (a -> b)
-    -> Optional a
-    -> Optional b
-  (<$>) =
-    error "todo: Course.Functor (<$>)#instance Optional"
+    (a -> b) -> Optional a -> Optional b
+  (<$>) _ Empty = Empty
+  (<$>) f (Full a) = Full (f a)
+
+{-
+(<$>) = mapOptional
+-}
 
 -- | Maps a function on the reader ((->) t) functor.
 --
@@ -80,11 +84,13 @@ instance Functor Optional where
 -- 17
 instance Functor ((->) t) where
   (<$>) ::
-    (a -> b)
-    -> ((->) t a)
-    -> ((->) t b)
-  (<$>) =
-    error "todo: Course.Functor (<$>)#((->) t)"
+    (a -> b) -> ((->) t a) -> ((->) t b)
+  (<$>) f g = f . g
+
+{-
+(<$>) = \a2b -> \t2a -> \t -> a2b (t2a t)
+(<$>) = (.)
+-}
 
 -- | Anonymous map. Maps a constant value on a functor.
 --
@@ -95,12 +101,12 @@ instance Functor ((->) t) where
 --
 -- prop> \x q -> x <$ Full q == Full x
 (<$) ::
-  Functor f =>
-  a
-  -> f b
-  -> f a
-(<$) =
-  error "todo: Course.Functor#(<$)"
+  Functor f => a -> f b -> f a
+(<$) a fb = (<$>) (\_ -> a) fb
+  
+{-
+(<$) = \a -> \fb -> (<$>) (\_ -> a) fb
+-}
 
 -- | Anonymous map producing unit value.
 --
@@ -116,11 +122,8 @@ instance Functor ((->) t) where
 -- >>> void (+10) 5
 -- ()
 void ::
-  Functor f =>
-  f a
-  -> f ()
-void =
-  error "todo: Course.Functor#void"
+  Functor f => f a -> f ()
+void = (<$) ()
 
 -----------------------
 -- SUPPORT LIBRARIES --

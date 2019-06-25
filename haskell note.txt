@@ -1,3 +1,5 @@
+day 1, bla | list
+
 universally conserving the property that the outputs of all functions are solely determined by their inputs
 
 this is not functional programming:
@@ -67,6 +69,7 @@ these are not proofs (unlike types), because tests only prove the presence, not 
 
 
 tomorrow:
+
 mapOptional :: (a -> b) -> Optional a -> Optional b
 map         :: (a -> b) -> List a -> Optional b
 (.)
@@ -110,3 +113,84 @@ Q: when to use the arrow Functor? A: when you don't want the clumsiness of depen
 
 hoogle: search for library function based on function name or type signature
 djinn: generate haskell code from a type
+
+
+
+
+
+day 2, optional | functor | applicative | monad
+
+do you functinal programmers have null?
+no, we have maybe/optional
+why is this better?
+a string that is not nullable but can have null reference is not different to an Optional that can be empty in itself
+you will get a compiler error if you do not check Empty
+
+bindOptional is analogous to flatMap with respect to mapOptional/map
+
+https://qfpl.io/posts/fp-cheat-sheet/
+
+(a -> b) -> f a -> f b is a covariant functor, "things that can map"
+
+data WhichWay = Equal | LT | GT
+data Fruit = Apple | Orange | Pear
+
+class Ordering a where
+  ordering :: a -> a -> WhichWay
+
+instance Ordering Fruit where
+  ordering Apple Apple = Equal
+
+(->) is a function on types
+:kind (->)
+(->) :: * -> * -> *
+which "takes two types" and returns another type
+
+functors are * -> *
+:k Functor
+Functor :: (* -> *) -> Constraint
+
+there's only one thing that's of unit value and that's ()
+
+(<*>) is called spaceship, apply, or angle bum
+
+Q: conceptually what's the point of pure?
+A: conceptually what's the point of zero to addition?
+
+the smallest turing complete programming language?
+SKI combinator calculus
+I is redundant so it's sometimes called SK combinator calculus
+pure and spaceship is all you need ;)
+
+all we're doing now is cartesian products
+there's another applicative ziplist to do list zipping
+
+an example of -> t is + 10
+lift2 (+) (+10) (*99) 7
+
+https://wiki.haskell.org/Typeclassopedia
+
+why functional programming?
+so that we don't write the same code again and again
+
+https://www.seas.upenn.edu/~cis194/fall16/
+
+something that's a functor but not an applicative?
+data Hi a = Hi a Int
+instance Functor Hi where
+  f <$> (Hi a n) = Hi (f a) n
+
+functor -> map
+applicative -> add pure and apply
+monad -> add bind
+
+just like flatten, flatMap, flattenAgain
+join can be written using bind and vice versa
+
+
+
+tomorrow:
+
+Chars is an alias of List Char
+
+. is an instance of fmap
