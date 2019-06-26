@@ -82,50 +82,108 @@ the contents of c
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
 printFile ::
-  FilePath
-  -> Chars
-  -> IO ()
+  FilePath -> Chars -> IO ()
 printFile =
-  error "todo: Course.FileIO#printFile"
+  \name contents ->
+    putStrLn ("======== " ++ name) *> putStrLn contents
+{-
+  \name contents ->
+  putStrLn ("======== " ++ name) >>= \_ ->
+  putStrLn contents
+-}
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
 printFiles ::
-  List (FilePath, Chars)
-  -> IO ()
-printFiles =
-  error "todo: Course.FileIO#printFiles"
+  List (FilePath, Chars) -> IO ()
+printFiles = void . sequence . (<$>) (uncurry printFile)
+
+{-
+-- sequence :: List (IO ()) -> IO (List ())
+-- void :: IO (List ()) -> IO ()
+printFiles fs =
+  void (sequence ((\(name, contents) -> printFile name contents) <$> fs))
+
+-- uncurry :: (a -> b -> c) -> (a, b) -> c
+printFiles = \fs ->
+  void (sequence (uncurry printFile <$> fs))
+
+-- \x -> f (g x)
+-- \x -> f ( g (h x))
+-- f . g . h
+to get the final expression
+-}
+
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
-  FilePath
-  -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+  FilePath -> IO (FilePath, Chars)
+getFile = lift2 (<$>) (,) readFile
+
+{-
+\name -> (\content -> (name , content)) <$> readFile name
+\name -> (\content -> (,) name content)) <$> readFile name
+\name -> ((,) name)) <$> readFile name
+\name -> (<$>) ((,) name) (readFile name)
+\name -> lift2 (<$>) (,) readFile name
+-}
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
-  List FilePath
-  -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+  List FilePath -> IO (List (FilePath, Chars))
+getFiles = sequence . ((<$>) getFile)
+
+{-
+getFiles fs = sequence (getFile <$> fs)
+-}
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@ and @printFiles@.
 run ::
-  FilePath
-  -> IO ()
+  FilePath -> IO ()
 run =
-  error "todo: Course.FileIO#run"
+  \p ->
+    readFile p >>= \x ->
+    getFiles (lines x) >>= \y ->
+    printFiles y
+
+{-
+bind is required so cannot use applicative notation
+can also write in do notation
+-}
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  getArgs >>= \args ->
+  case args of
+    Nil -> putStrLn "arguments required"
+    h :. _ -> run h
 
+{-
+I wrote
+fs -> getFiles fs >>= \y -> printFiles y
+in the last clause
+which treats args as all file names given one by one
+-}
+
+{-
+> :main "./share/files.txt"
+-}
+
+{- a haskell program that runs like echo -}
+{-
+import System.IO
+
+main =
+  do
+    s <- hGetContents stdin
+    putStrLn s
+-}
+ 
 ----
 
 -- Was there was some repetition in our solution?

@@ -194,3 +194,114 @@ tomorrow:
 Chars is an alias of List Char
 
 . is an instance of fmap
+
+
+
+
+
+day 3
+
+-- a functor that's not applicative --
+data Hi a = Hi Int a
+
+instance Functor Hi where
+  -- fmap :: (a -> b) -> Hi a -> Hi b
+  fmap f (Hi n a) = Hi n (f a)
+
+-- this 
+instance Applicative Hi where
+  -- pure :: a -> Hi a
+  pure a = Hi (-1) a
+  Hi n1 f <*> Hi n2 a = Hi 27 (f a)
+
+-- has binary associative and identity operations, not applicative
+instance Applicate Hi where
+  -- pure :: a -> Hi 0 a
+  pure a = Hi (-1) a
+  Hi n1 f <*> Hi n2 a = Hi (n1 + n2) (f a)
+
+-- associativity: (a . b) . c = a . (b . c)
+
+-- a applicative that does not have a monad --
+data ZipList a = Nil | Cons a (ZipList a)
+
+instance Functor ZipList where
+  fmap _ Nil = Nil
+  fmap f (Cons h t) = ...
+
+instance Applicative ZipList where
+  pure a = Cons a (pure a)
+  Nil <*> _ = Nil
+  _ <*> Nil = Nil
+  Cons h1 t1 <*> Cons h2 t2 = Cons (h1 h2) (t1 <*> t2)
+
+-- semigroups
+Int/+ Int/* ...
+
+-- monoids are semigroups that has id
+(->)/(.)/id
+
+type keyword is type alias (not define)
+
+:info Functor to get a list of all Functors
+
+list1 calls list and list calls list1?
+that's fine, they both have base cases so they terminate, since haskell has lazy evaluation
+consequences (not meaning) of lazy evaluation:
+> bottom = bottom
+> False && bottom
+False
+> konst a _ = a
+> konst 99 bottom
+99
+
+f _|_ = _|_ then strict
+i.e. if you can pass in a _|_ and not always get back a _|_ then it's strict
+
+haskell is lazy so
+> bottom = bottom
+> blah = 1 :. bottom
+> headOr 99 blah
+1
+> headOr 99 (map (*10) blah)
+10
+> headOr 99 (map (*10) (bottom :. bottom))
+-- spins forever
+> isEmpty (bottom :. bottom)
+False
+
+type of bottom? unhabited type
+> :t bottom
+bottom ::t
+> :t bottom :. bottom
+bottom :. bottom :: List t
+> :t map (*10) (bottom :. bottom)
+map (*10) (bottom :. bottom) :: Num b => List b
+
+functional programming languages can have lazy evaluation but not general purpose ones
+
+> foldRight const 99 infinity
+0
+
+bottom in haskell is "undefined"
+
+applicatives: you cannot use any previously used value
+one less constraint, so more operations can be performed on them
+
+what's in Parser.hs is monad based parsing
+
+next up exercises if you want more parsing: MoreParser.hs and JsonParser.hs
+
+https://www.youtube.com/watch?v=NzIZzvbplSM
+
+
+
+IO (a monad)
+
+unit () has one constructor with no arguments
+
+Queensland Functional Programming Lab
+IRC Freenode: #qfpl
+
+Q: is there a way to use a single lift, instead of lift0, 1, 2, 3 ...?
+A: applicative comprehension / idiom brackets but not suggested
